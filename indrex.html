@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Signwright</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo:wght@400;600&family=Archivo+Black&family=Abril+Fatface&family=Bangers&family=Bebas+Neue&family=Caveat:wght@400;700&family=Fredoka:wght@400;700&family=Lato:ital,wght@0,400;0,700;1,400;1,700&family=Lobster&family=Montserrat:ital,wght@0,400;0,700;1,400;1,700&family=Oswald:wght@400;700&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Righteous&family=Roboto+Slab:wght@400;700&family=Rye&family=Special+Elite&display=swap">
+<style>
+:root{--bench:#c5cbd1;--panel:#f4f5f6;--ink:#182026;--mut:#5b6872;--line:#b4bcc3;--acc:#0a58a8;--accT:#fff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bench:#171c20;--panel:#262d33;--ink:#e6eaed;--mut:#9aa7b1;--line:#3a444c;--acc:#5aa9f0;--accT:#06121f}}
+:root[data-theme="dark"]{--bench:#171c20;--panel:#262d33;--ink:#e6eaed;--mut:#9aa7b1;--line:#3a444c;--acc:#5aa9f0;--accT:#06121f}
+html,body{height:100%;margin:0}
+body{background:var(--panel);color:var(--ink);font:14px/1.35 'Archivo',system-ui,sans-serif}
+.app{height:100%;display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr) 280px}
+.top{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 12px;border-bottom:1px solid var(--line)}
+.top b{font-size:16px;margin-right:6px}
+.ver{font-size:11px;color:var(--mut);margin:0 6px 0 -2px;opacity:.8}
+.bench{background:var(--bench);overflow:auto;display:flex;padding:16px;min-height:0}
+.holder{margin:auto;flex:none}
+.sheet{background:#fff;position:relative;transform-origin:0 0;box-shadow:0 2px 14px #0006;touch-action:none}
+.guide{position:absolute;border:1px dashed #3b82f6;pointer-events:none;z-index:9998}
+.item{position:absolute;cursor:move;user-select:none;-webkit-user-select:none;line-height:1.1;overflow-wrap:break-word;white-space:pre-wrap}
+.item svg{display:block;overflow:visible}.item img{width:100%;height:100%;display:block}
+#sel{position:absolute;border:calc(1.5px*var(--inv)) solid var(--acc);pointer-events:none;z-index:9999}
+#sel i{position:absolute;pointer-events:auto;width:calc(14px*var(--inv));height:calc(14px*var(--inv));background:var(--acc);border:calc(2px*var(--inv)) solid #fff;box-sizing:border-box}
+.rs{right:calc(-7px*var(--inv));bottom:calc(-7px*var(--inv));cursor:nwse-resize}
+.ro{left:50%;margin-left:calc(-7px*var(--inv));top:calc(-32px*var(--inv));border-radius:50%;cursor:grab}
+.mv{left:calc(-7px*var(--inv));top:calc(-7px*var(--inv));cursor:move}
+.insp{padding:12px;overflow:auto;border-left:1px solid var(--line);display:grid;gap:10px;align-content:start}
+.insp h4{margin:6px 0 0;font-size:13px}
+.hint{color:var(--mut);margin:0}
+label{display:grid;gap:2px;font-size:12px;color:var(--mut)}
+label.ck{display:flex;gap:6px;align-items:center}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+input,select,textarea,button{font:inherit;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:4px 6px;min-width:0}
+input[type=color]{padding:0;height:28px;width:100%}input[type=checkbox]{width:auto}
+button{cursor:pointer}button.pri{background:var(--acc);color:var(--accT);border-color:var(--acc)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+#toast{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--panel);padding:8px 14px;border-radius:6px;z-index:99}
+#toast:empty{display:none}
+@media (max-width:760px){.app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 60vh auto;height:auto;min-height:100%}.insp{border-left:0;border-top:1px solid var(--line)}}
+@media print{:root{padding:0}.top,.insp,#sel,.guide,#toast{display:none!important}html,body{height:auto}.app{display:block}.bench{overflow:visible;padding:0;background:none;display:block}.holder{width:auto!important;height:auto!important;margin:0}.sheet{transform:none!important;box-shadow:none}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style></head><body>
+<div class="app">
+<div class="top">
+ <b>Signwright</b><small class="ver" title="Version">v1.2</small>
+ <select id="size" aria-label="Paper size"><option>Letter</option><option>Legal</option><option>Tabloid</option><option>A4</option><option>A3</option><option value="custom" hidden>Imported size</option></select>
+ <button id="orient">Portrait</button>
+ <label class="ck">Margin (in) <input id="mar" type="number" min="0" max="3" step=".125" value=".5" style="width:64px"></label>
+ <select id="tpl" aria-label="Templates"><option value="">Templates…</option></select>
+ <button id="addT">Text box</button><button id="addA">Word art</button><button id="addI">Image</button>
+ <button id="saveProj">Save project</button><button id="openProj">Open project</button><button id="impPdf">Import PDF</button><button id="undo">Undo</button><button id="save" class="pri">Save as PDF</button>
+ <input id="imgf" type="file" accept="image/*" hidden><input id="pdff" type="file" accept="application/pdf" hidden><input id="projf" type="file" accept=".json,application/json" hidden>
+</div>
+<div class="bench" id="bench"><div class="holder" id="holder"><div class="sheet" id="sheet"><div class="guide" id="guide"></div>
+<div id="sel" hidden><i class="mv" data-h="move"></i><i class="ro" data-h="rot"></i><i class="rs" data-h="size"></i></div></div></div></div>
+<div class="insp" id="insp"></div>
+</div>
+<div id="toast" role="status"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+const $=s=>document.querySelector(s),U=96,sheet=$('#sheet'),insp=$('#insp');
+const FONTS=['Anton','Abril Fatface','Archivo Black','Bangers','Bebas Neue','Caveat','Fredoka','Lato','Lobster','Montserrat','Oswald','Pacifico','Permanent Marker','Playfair Display','Righteous','Roboto Slab','Rye','Special Elite'];
+const SIZES={Letter:[8.5,11],Legal:[8.5,14],Tabloid:[11,17],A4:[8.27,11.69],A3:[11.69,16.54]};
+const S={pw:8.5,ph:11,land:false,m:.5,items:[],sel:null,stack:[],seq:1,hist:[],sc:1};
+const els=new Map();
+const dim=()=>S.land?[S.ph,S.pw]:[S.pw,S.ph];
+const cur=()=>S.items.find(i=>i.id===S.sel);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let tt;function toast(m){const t=$('#toast');t.textContent=m;clearTimeout(tt);tt=setTimeout(()=>t.textContent='',3500)}
+function mk(type,o){return Object.assign({id:S.seq++,type,x:1,y:1,w:4,h:1.5,rot:0,text:type==='art'?'WORD ART':'Your text here',font:type==='art'?'Anton':'Montserrat',size:type==='art'?72:36,color:'#111111',bold:false,italic:false,align:'center',curve:0,ls:1.1,ul:false,shOn:false,shX:4,shY:4,shB:3,shC:'#000000',fmode:'color',color2:'#ffffff',pat:'stripes',fimg:'',src:'',ar:1},o)}
+/* ---------- drawing ---------- */
+function defs(it,id){const W=it.w*U,H=it.h*U;
+ if(it.fmode==='image'&&it.fimg)return `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${W}" height="${H}"><image href="${it.fimg}" width="${W}" height="${H}" preserveAspectRatio="xMidYMid slice"/></pattern>`;
+ if(it.fmode==='pattern'){const P=Math.max(8,it.size*.3),c=it.color,d=it.color2,h=P/2;
+  const g={stripes:`<rect width="${P}" height="${P}" fill="${d}"/><rect width="${h}" height="${P}" fill="${c}"/>`,
+   dots:`<rect width="${P}" height="${P}" fill="${d}"/><circle cx="${h}" cy="${h}" r="${P*.25}" fill="${c}"/>`,
+   checks:`<rect width="${P}" height="${P}" fill="${d}"/><rect width="${h}" height="${h}" fill="${c}"/><rect x="${h}" y="${h}" width="${h}" height="${h}" fill="${c}"/>`,
+   grid:`<rect width="${P}" height="${P}" fill="${d}"/><path d="M0 0H${P}M0 0V${P}" stroke="${c}" stroke-width="${P*.18}"/>`}[it.pat];
+  return `<pattern id="${id}" patternUnits="userSpaceOnUse" width="${P}" height="${P}" ${it.pat==='stripes'?'patternTransform="rotate(45)"':''}>${g}</pattern>`}
+ return ''}
+function paint(it){const e=els.get(it.id),s=e.style;
+ if(it.type==='image'){e.innerHTML=`<img src="${it.src}" alt="" draggable="false">`;return}
+ const fs=it.size*96/72;
+ if(it.type==='text'){e.textContent=it.text;Object.assign(s,{fontFamily:`'${it.font}',sans-serif`,fontSize:fs+'px',color:it.color,fontWeight:it.bold?700:400,fontStyle:it.italic?'italic':'normal',textAlign:it.align,lineHeight:it.ls,textDecoration:it.ul?'underline':'none'});return}
+ const W=it.w*U,H=it.h*U,bend=it.curve/100*H*.9,y0=H/2+bend/2+fs*.33,L=it.text.split('\n'),id='p'+it.id,d=defs(it,id);
+ const fill=d?`url(#${id})`:it.color;
+ e.innerHTML=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><defs>${d}${L.map((_,i)=>{const o=(i-(L.length-1)/2)*it.ls*fs;return `<path id="c${it.id}_${i}" d="M0 ${y0+o} Q${W/2} ${y0+o-2*bend} ${W} ${y0+o}"/>`}).join('')}</defs>${L.map((t,i)=>`<text font-family="'${it.font}',sans-serif" font-size="${fs}" font-weight="${it.bold?700:400}" font-style="${it.italic?'italic':'normal'}" text-decoration="${it.ul?'underline':'none'}" fill="${fill}" text-anchor="middle" style="white-space:pre"><textPath href="#c${it.id}_${i}" startOffset="50%">${esc(t)}</textPath></text>`).join('')}</svg>`}
+function place(it){const s=els.get(it.id).style;s.left=it.x*U+'px';s.top=it.y*U+'px';s.width=it.w*U+'px';s.height=it.h*U+'px';s.transform=`rotate(${it.rot}deg)`;
+ s.filter=it.shOn?`drop-shadow(${it.shX}px ${it.shY}px ${it.shB}px ${it.shC}99)`:''}
+function draw(it){if(!els.has(it.id)){const e=document.createElement('div');e.className='item';e.dataset.id=it.id;sheet.insertBefore(e,$('#sel'));els.set(it.id,e)}place(it);paint(it)}
+function restack(){S.items.forEach((it,i)=>els.get(it.id).style.zIndex=i+1)}
+function rebuild(){els.forEach(e=>e.remove());els.clear();S.items.forEach(draw);restack()}
+function selUpdate(){const it=cur(),o=$('#sel');o.hidden=!it;if(!it)return;const s=o.style;s.left=it.x*U+'px';s.top=it.y*U+'px';s.width=it.w*U+'px';s.height=it.h*U+'px';s.transform=`rotate(${it.rot}deg)`}
+/* ---------- page ---------- */
+function layout(){const [W,H]=dim(),b=$('#bench');
+ sheet.style.width=W*U+'px';sheet.style.height=H*U+'px';
+ S.sc=Math.min(1.5,(b.clientWidth-32)/(W*U),(b.clientHeight-32)/(H*U));if(!(S.sc>0.05))S.sc=.5;
+ sheet.style.transform=`scale(${S.sc})`;sheet.style.setProperty('--inv',1/S.sc);
+ $('#holder').style.width=W*U*S.sc+'px';$('#holder').style.height=H*U*S.sc+'px';
+ const g=$('#guide').style,m=S.m*U;g.left=g.top=m+'px';g.width=W*U-2*m+'px';g.height=H*U-2*m+'px';
+ $('#orient').textContent=S.land?'Landscape':'Portrait';
+ let ps=$('#ps');if(!ps){ps=document.createElement('style');ps.id='ps';document.head.appendChild(ps)}
+ ps.textContent=`@page{size:${W}in ${H}in;margin:0}`}
+new ResizeObserver(layout).observe($('#bench'));
+/* ---------- history ---------- */
+function snap(){S.hist.push(JSON.stringify(S.items));if(S.hist.length>20)S.hist.shift()}
+function undo(){if(!S.hist.length)return toast('Nothing to undo');S.items=JSON.parse(S.hist.pop());rebuild();if(!cur())S.sel=null;select(S.sel)}
+/* ---------- selection & inspector ---------- */
+function select(id){S.sel=id;inspect();selUpdate()}
+const fld=(l,k,t='text',x='')=>`<label>${l}<input data-k="${k}" type="${t}" ${x}></label>`;
+function inspect(){const it=cur();
+ if(!it){insp.innerHTML=`<p class="hint">Add a text box, word art or image from the toolbar, or pick a template.</p><p class="hint">Click a spot where items overlap, then press Tab (Shift+Tab) to select the items beneath. Arrow keys nudge; Delete removes. Drag the corner square to resize and the circle to rotate.</p>`;return}
+ let h=`<div class="g2"><button data-a="front">To front</button><button data-a="fwd">Forward</button><button data-a="bak">To back</button><button data-a="back">Backward</button><button data-a="dup">Duplicate</button><button data-a="del">Delete</button></div>
+ <div class="g3">${fld('X (in)','x','number','step=".05"')}${fld('Y (in)','y','number','step=".05"')}${fld('Turn °','rot','number','step="1"')}${fld('Width','w','number','step=".05" min=".2"')}${fld('Height','h','number','step=".05" min=".2"')}</div>`;
+ if(it.type!=='image'){
+  h+=`<label>Text<textarea data-k="text" rows="3"></textarea></label><label>Font<select data-k="font">${FONTS.map(f=>`<option style="font-family:'${f}'">${f}</option>`).join('')}</select></label>
+  <div class="g2">${fld('Size (pt)','size','number','min="6" step="1"')}${fld('Colour','color','color')}</div>
+  <div class="g3"><label class="ck"><input data-k="bold" type="checkbox">Bold</label><label class="ck"><input data-k="italic" type="checkbox">Italic</label><label class="ck"><input data-k="ul" type="checkbox">Underline</label></div>${fld('Line spacing','ls','number','min=".6" max="3" step=".05"')}`;
+  if(it.type==='text')h+=`<label>Align<select data-k="align"><option>left</option><option>center</option><option>right</option></select></label>`;
+  else h+=`<h4>Word art</h4><label>Curve<input data-k="curve" type="range" min="-100" max="100"></label>
+  <label>Fill<select data-k="fmode"><option value="color">Solid colour</option><option value="pattern">Pattern</option><option value="image">Image</option></select></label>
+  <div class="g2"><label>Pattern<select data-k="pat"><option>stripes</option><option>dots</option><option>checks</option><option>grid</option></select></label>${fld('Pattern backdrop','color2','color')}</div>
+  <label>Fill image<input id="fillf" type="file" accept="image/*"></label>`}
+ h+=`<h4>Drop shadow</h4><label class="ck"><input data-k="shOn" type="checkbox">On</label><div class="g3">${fld('X','shX','number')}${fld('Y','shY','number')}${fld('Blur','shB','number','min="0"')}</div>${fld('Shadow colour','shC','color')}`;
+ insp.innerHTML=h;syncAll(it)}
+function syncAll(it){insp.querySelectorAll('[data-k]').forEach(i=>{const v=it[i.dataset.k];if(i.type==='checkbox')i.checked=!!v;else i.value=typeof v==='number'?+v.toFixed(2):v})}
+function syncGeom(){const it=cur();if(!it)return;['x','y','w','h','rot','size'].forEach(k=>{const i=insp.querySelector(`[data-k="${k}"]`);if(i&&document.activeElement!==i)i.value=+it[k].toFixed(2)})}
+insp.addEventListener('focusin',e=>{if(e.target.dataset.k)snap()});
+insp.addEventListener('input',e=>{const t=e.target,k=t.dataset.k,it=cur();if(!k||!it)return;
+ if(t.type==='number'||t.type==='range'){if(t.value==='')return;it[k]=+t.value}else it[k]=t.type==='checkbox'?t.checked:t.value;
+ if(it.type==='image'&&k==='w')it.h=it.w/it.ar;
+ draw(it);selUpdate()});
+insp.addEventListener('change',e=>{if(e.target.id==='fillf'){const it=cur(),f=e.target.files[0];if(!f)return;snap();readURL(f).then(u=>{it.fimg=u;it.fmode='image';draw(it);syncAll(it)})}});
+insp.addEventListener('click',e=>{const a=e.target.dataset.a;if(!a)return;
+ if(a==='del')return del();
+ if(a==='dup'){snap();const c=JSON.parse(JSON.stringify(cur()));c.id=S.seq++;c.x+=.25;c.y+=.25;S.items.push(c);draw(c);restack();return select(c.id)}
+ const i=S.items.findIndex(x=>x.id===S.sel);snap();const [it]=S.items.splice(i,1);
+ S.items.splice(a==='front'?S.items.length:a==='bak'?0:Math.max(0,Math.min(S.items.length,i+(a==='fwd'?1:-1))),0,it);restack()});
+function del(){const it=cur();if(!it)return;snap();els.get(it.id).remove();els.delete(it.id);S.items=S.items.filter(x=>x!==it);select(null)}
+/* ---------- pointer: select, move, resize, rotate ---------- */
+let drag=null;
+function startDrag(mode,e){const it=cur();if(!it)return;snap();const r=els.get(it.id).getBoundingClientRect();
+ drag={mode,sx:e.clientX,sy:e.clientY,x:it.x,y:it.y,w:it.w,h:it.h,size:it.size,cx:r.left+r.width/2,cy:r.top+r.height/2}}
+sheet.addEventListener('pointerdown',e=>{
+ if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();
+ const h=e.target.closest('[data-h]');if(h){e.preventDefault();return startDrag(h.dataset.h,e)}
+ e.preventDefault();
+ const ids=[...new Set(document.elementsFromPoint(e.clientX,e.clientY).map(n=>n.closest&&n.closest('.item')).filter(Boolean).map(n=>+n.dataset.id))];
+ S.stack=ids;if(!ids.length)return select(null);
+ select(ids[0]);startDrag('move',e)});
+addEventListener('pointermove',e=>{if(!drag)return;const it=cur();if(!it)return;
+ const dx=(e.clientX-drag.sx)/S.sc/U,dy=(e.clientY-drag.sy)/S.sc/U,r=it.rot*Math.PI/180,c=Math.cos(r),s=Math.sin(r);
+ if(drag.mode==='move'){it.x=drag.x+dx;it.y=drag.y+dy}
+ else if(drag.mode==='size'){const lx=dx*c+dy*s,ly=-dx*s+dy*c;let w=Math.max(.2,drag.w+lx),h=it.type==='image'?w/it.ar:Math.max(.2,drag.h+ly);
+  const dw=w-drag.w,dh=h-drag.h,cx=drag.x+drag.w/2+dw/2*c-dh/2*s,cy=drag.y+drag.h/2+dw/2*s+dh/2*c;
+  it.w=w;it.h=h;it.x=cx-w/2;it.y=cy-h/2;if(it.type==='art')it.size=Math.max(6,drag.size*w/drag.w)}
+ else{let a=Math.atan2(e.clientY-drag.cy,e.clientX-drag.cx)*180/Math.PI+90;if(e.shiftKey)a=Math.round(a/15)*15;it.rot=Math.round(a*10)/10}
+ place(it);if(it.type==='art'&&drag.mode==='size')paint(it);selUpdate();syncGeom()});
+addEventListener('pointerup',()=>drag=null);
+addEventListener('keydown',e=>{const typing=/INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName);
+ if((e.ctrlKey||e.metaKey)&&e.key==='z'&&!typing){e.preventDefault();return undo()}
+ if(typing)return;
+ if(e.key==='Tab'&&S.stack.length>1&&S.stack.includes(S.sel)){e.preventDefault();const n=S.stack.length;return select(S.stack[(S.stack.indexOf(S.sel)+(e.shiftKey?-1:1)+n)%n])}
+ const it=cur();if(!it)return;
+ if(e.key==='Delete'||e.key==='Backspace'){e.preventDefault();return del()}
+ const st=e.shiftKey?.25:.05,d={ArrowLeft:[-st,0],ArrowRight:[st,0],ArrowUp:[0,-st],ArrowDown:[0,st]}[e.key];
+ if(d){e.preventDefault();it.x+=d[0];it.y+=d[1];place(it);selUpdate();syncGeom()}});
+/* ---------- adding things ---------- */
+function add(it){snap();const [W,H]=dim();it.x=(W-it.w)/2;it.y=(H-it.h)/2;S.items.push(it);draw(it);restack();select(it.id)}
+$('#addT').onclick=()=>add(mk('text',{w:4,h:1}));
+$('#addA').onclick=()=>add(mk('art',{w:6,h:1.4}));
+const readURL=f=>new Promise(r=>{const fr=new FileReader();fr.onload=()=>r(fr.result);fr.readAsDataURL(f)});
+$('#addI').onclick=()=>$('#imgf').click();
+$('#imgf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;const src=await readURL(f),im=new Image();im.onload=()=>{const [W,H]=dim(),ar=im.width/im.height,w=Math.min(4,W-2*S.m,(H-2*S.m)*ar);add(mk('image',{src,ar,w,h:w/ar}))};im.src=src};
+/* ---------- templates ---------- */
+const TPL={
+'Yard sale':(W,H,A,T,b)=>[A('YARD SALE',{size:b*12,y:H*.08,color:'#d62828',curve:25,shOn:true}),T('Saturday, 8 am to 2 pm',{size:b*4.5,y:H*.42,bold:true}),T('Furniture, tools, books and toys',{size:b*3.2,y:H*.54}),A('123 Maple Lane',{font:'Lobster',size:b*6,y:H*.72,color:'#1d3557'})],
+'Caution':(W,H,A,T,b)=>[A('CAUTION',{font:'Archivo Black',size:b*11,y:H*.2,fmode:'pattern',pat:'stripes',color:'#111111',color2:'#f7c600',shOn:true,shX:3,shY:3,shB:0}),T('Wet floor',{font:'Oswald',size:b*8,y:H*.5,bold:true})],
+'Lost cat':(W,H,A,T,b)=>[A('LOST CAT',{font:'Bangers',size:b*14,y:H*.08}),T('Orange tabby, answers to Biscuit.\nLast seen near Elm Street.',{size:b*3.6,y:H*.38,lines:2}),A('Call 555-0142',{font:'Permanent Marker',size:b*7,y:H*.68,color:'#c1121f',curve:-15})],
+'Open':(W,H,A,T,b)=>[A('Open',{font:'Pacifico',size:b*20,y:H*.18,color:'#e63946',curve:35,shOn:true}),T('Come on in',{font:'Caveat',size:b*7,y:H*.62,bold:true})],
+'Welcome':(W,H,A,T,b)=>[A('Welcome',{font:'Playfair Display',size:b*15,y:H*.2,color:'#1d3557',italic:true}),T('Please remove your shoes at the door',{font:'Playfair Display',size:b*3.6,y:H*.5})]};
+Object.keys(TPL).forEach(n=>$('#tpl').add(new Option(n,n)));
+function applyTpl(n){snap();const [W,H]=dim(),m=S.m,b=Math.min(W,H),f=(t,o)=>mk(t,{x:m,w:W-2*m,h:o.size/72*1.4*(o.lines||1),...o});
+ S.items=TPL[n](W,H,(s,o)=>f('art',{text:s,...o}),(s,o)=>f('text',{text:s,...o}),b);rebuild();select(null)}
+$('#tpl').onchange=e=>{if(e.target.value)applyTpl(e.target.value);e.target.value=''};
+/* ---------- page controls, PDF ---------- */
+$('#size').onchange=e=>{[S.pw,S.ph]=SIZES[e.target.value];layout()};
+$('#orient').onclick=()=>{S.land=!S.land;layout()};
+$('#mar').oninput=e=>{S.m=Math.max(0,+e.target.value||0);layout()};
+$('#undo').onclick=undo;
+$('#save').onclick=()=>{select(null);try{window.print()}catch(_){toast('Use your browser menu: Print, then Save as PDF')}};
+$('#impPdf').onclick=()=>$('#pdff').click();
+$('#pdff').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  const pdf=await pdfjsLib.getDocument({data:await f.arrayBuffer()}).promise,pg=await pdf.getPage(1),v=pg.getViewport({scale:1}),
+   vp=pg.getViewport({scale:Math.min(3,2400/Math.max(v.width,v.height))}),c=document.createElement('canvas');
+  c.width=vp.width;c.height=vp.height;await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;
+  snap();const wi=v.width/72,hi=v.height/72;S.pw=Math.min(wi,hi);S.ph=Math.max(wi,hi);S.land=wi>hi;$('#size').value='custom';layout();
+  const [W,H]=dim(),it=mk('image',{src:c.toDataURL('image/jpeg',.9),ar:W/H,x:0,y:0,w:W,h:H});S.items.unshift(it);draw(it);restack();select(it.id);
+  toast(pdf.numPages>1?`Imported page 1 of ${pdf.numPages} as the back layer`:'Imported as the back layer')}
+ catch(err){toast('Could not read that PDF')}};
+/* ---------- project save / open ---------- */
+let DL=null;
+(window.claude&&claude.use?claude.use('downloads'):Promise.resolve(null)).then(d=>{DL=d;if(!d)$('#saveProj').hidden=true}).catch(()=>$('#saveProj').hidden=true);
+$('#saveProj').onclick=async()=>{if(!DL)return toast('Saving is not available here');
+ const data=JSON.stringify({app:'signwright',v:1,pw:S.pw,ph:S.ph,land:S.land,m:S.m,seq:S.seq,items:S.items});
+ try{await DL.save({filename:'sign-project.json',data});toast('Project saved')}catch(e){if(!e||e.code!=='declined')toast('Could not save the project')}};
+$('#openProj').onclick=()=>$('#projf').click();
+$('#projf').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{const p=JSON.parse(await f.text());if(p.app!=='signwright'||!Array.isArray(p.items)||!(p.pw>0)||!(p.ph>0))throw 0;
+  snap();const items=p.items.map(i=>mk(i.type==='art'||i.type==='image'?i.type:'text',i));
+  Object.assign(S,{pw:p.pw,ph:p.ph,land:!!p.land,m:+p.m>=0?+p.m:.5,items,seq:Math.max(+p.seq||1,...items.map(i=>i.id+1))});
+  const k=Object.keys(SIZES).find(k=>Math.abs(SIZES[k][0]-S.pw)<.01&&Math.abs(SIZES[k][1]-S.ph)<.01);
+  if(!k)toast('Opened with a custom page size');
+  $('#size').value=k||'custom';$('#mar').value=S.m;layout();rebuild();select(null);if(k)toast('Project opened')}
+ catch(err){toast('That file is not a Signwright project')}};
+/* ---------- start ---------- */
+layout();applyTpl('Yard sale');S.hist=[];select(null);
+</script></body></html>
